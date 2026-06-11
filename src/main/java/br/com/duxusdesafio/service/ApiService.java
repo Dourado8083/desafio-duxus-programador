@@ -1,91 +1,112 @@
 package br.com.duxusdesafio.service;
 
+import br.com.duxusdesafio.exception.DataInvalidaException;
+import br.com.duxusdesafio.exception.NenhumResultadoEncontradoException;
+import br.com.duxusdesafio.model.ComposicaoTime;
 import br.com.duxusdesafio.model.Integrante;
 import br.com.duxusdesafio.model.Time;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
-/**
- * Service que possuirá as regras de negócio para o processamento dos dados
- * solicitados no desafio!
- *
- * OBS ao candidato: PREFERENCIALMENTE, NÃO ALTERE AS ASSINATURAS DOS MÉTODOS!
- * Trabalhe com a proposta pura.
- *
- * @author carlosau
- */
+
 @Service
 public class ApiService {
 
-    /**
-     * Vai retornar um Time, com a composição do time daquela data
-     */
-    public Time timeDaData(LocalDate data, List<Time> todosOsTimes){
+    public Time timeDaData(LocalDate data, List<Time> todosOsTimes) {
         return todosOsTimes.stream()
                 .filter(t -> t.getData().equals(data))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new NenhumResultadoEncontradoException("Nenhum time encontrado para a data: " + data));
     }
 
-    /**
-     * Vai retornar o integrante que estiver presente na maior quantidade de times
-     * dentro do período
-     */
-    public Integrante integranteMaisUsado(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes){
-        // TODO Implementar método seguindo as instruções!
-        return null;
+    public Integrante integranteMaisUsado(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes) {
+        validarPeriodo(dataInicial, dataFinal);
+
+        return filtrarPorPeriodo(todosOsTimes, dataInicial, dataFinal)
+                .flatMap(t -> t.getComposicaoTime().stream())
+                .map(ComposicaoTime::getIntegrante)
+                .collect(Collectors.groupingBy(i -> i, Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElseThrow(() -> new NenhumResultadoEncontradoException("Nenhum integrante encontrado no período."));
     }
 
-    /**
-     * Vai retornar uma lista com os nomes dos integrantes do time mais recorrente dentro do período.
-     * OBS: Time é o clube + composição em determinada data
-     */
-    public List<String> integrantesDoTimeMaisRecorrente(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes){
-        // TODO Implementar método seguindo as instruções!
-        return null;
+    public List<String> integrantesDoTimeMaisRecorrente(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes) {
+        validarPeriodo(dataInicial, dataFinal);
+
+        String clubeMaisRecorrente = clubeMaisRecorrente(dataInicial, dataFinal, todosOsTimes);
+
+        return filtrarPorPeriodo(todosOsTimes, dataInicial, dataFinal)
+                .filter(t -> t.getNomeDoClube().equals(clubeMaisRecorrente))
+                .findFirst()
+                .map(t -> t.getComposicaoTime().stream()
+                        .map(ct -> ct.getIntegrante().getNome())
+                        .collect(Collectors.toList()))
+                .orElseThrow(() -> new NenhumResultadoEncontradoException("Nenhum time recorrente encontrado no período."));
     }
 
-    /**
-     * Vai retornar a função mais recorrente nos times dentro do período
-     */
-    public String funcaoMaisRecorrente(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes){
-        // TODO Implementar método seguindo as instruções!
-        return null;
+    public String funcaoMaisRecorrente(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes) {
+        validarPeriodo(dataInicial, dataFinal);
+
+        return filtrarPorPeriodo(todosOsTimes, dataInicial, dataFinal)
+                .flatMap(t -> t.getComposicaoTime().stream())
+                .map(ct -> ct.getIntegrante().getFuncao())
+                .collect(Collectors.groupingBy(f -> f, Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElseThrow(() -> new NenhumResultadoEncontradoException("Nenhuma função encontrada no período."));
     }
 
-    /**
-     * Vai retornar o nome do Clube mais comum dentro do período
-     */
     public String clubeMaisRecorrente(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes) {
-        // TODO Implementar método seguindo as instruções!
-        return null;
+        validarPeriodo(dataInicial, dataFinal);
+
+        return filtrarPorPeriodo(todosOsTimes, dataInicial, dataFinal)
+                .collect(Collectors.groupingBy(Time::getNomeDoClube, Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElseThrow(() -> new NenhumResultadoEncontradoException("Nenhum clube encontrado no período."));
     }
 
+    public Map<String, Long> contagemDeClubesNoPeriodo(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes) {
+        validarPeriodo(dataInicial, dataFinal);
 
-    /**
-     * Vai retornar o número (quantidade) de aparições de cada Clube participante no período
-     */
-    public Map<String, Long> contagemDeClubesNoPeriodo(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes){
-        // TODO Implementar método seguindo as instruções!
-        return null;
+        Map<String, Long> contagem = filtrarPorPeriodo(todosOsTimes, dataInicial, dataFinal)
+                .collect(Collectors.groupingBy(Time::getNomeDoClube, Collectors.counting()));
+
+        if (contagem.isEmpty()) throw new NenhumResultadoEncontradoException("Nenhum clube encontrado no período.");
+
+        return contagem;
     }
 
-    /**
-     * Vai retornar o número (quantidade) de Funções dentro do período.
-     * Dica - pense sobre repetições!
-     */
-    public Map<String, Long> contagemPorFuncao(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes){
-        return todosOsTimes.stream()
-                .filter(t -> dentroDoperiodo(t.getData(), dataInicial, dataFinal))
+    public Map<String, Long> contagemPorFuncao(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes) {
+        validarPeriodo(dataInicial, dataFinal);
+
+        Map<String, Long> contagem = filtrarPorPeriodo(todosOsTimes, dataInicial, dataFinal)
                 .flatMap(t -> t.getComposicaoTime().stream())
                 .map(ct -> ct.getIntegrante().getFuncao())
                 .collect(Collectors.groupingBy(f -> f, Collectors.counting()));
+
+        if (contagem.isEmpty()) throw new NenhumResultadoEncontradoException("Nenhuma função encontrada no período.");
+
+        return contagem;
     }
-    private boolean dentroDoperiodo(LocalDate data, LocalDate dataInicial, LocalDate dataFinal) {
-        return (dataInicial != null && data.isBefore(dataInicial)) ||
-                (dataFinal != null && data.isAfter(dataFinal)) ? false : true;
+
+    // Métodos auxiliares
+
+    private java.util.stream.Stream<Time> filtrarPorPeriodo(List<Time> times, LocalDate dataInicial, LocalDate dataFinal) {
+        return times.stream()
+                .filter(t -> (dataInicial == null || !t.getData().isBefore(dataInicial))
+                        && (dataFinal == null || !t.getData().isAfter(dataFinal)));
+    }
+
+    private void validarPeriodo(LocalDate dataInicial, LocalDate dataFinal) {
+        if (dataInicial != null && dataFinal != null && dataInicial.isAfter(dataFinal)) {
+            throw new DataInvalidaException("Data inicial não pode ser maior que a data final.");
+        }
     }
 }
