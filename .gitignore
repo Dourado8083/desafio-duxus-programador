@@ -1,0 +1,42 @@
+# ==========================================
+# Compilação e Artefatos de Build
+# ==========================================
+# Maven
+target/
+*.jar
+*.war
+*.ear
+*.nar
+
+# Gradle
+build/
+.gradle/
+/out/
+
+# ==========================================
+# Configurações de IDEs
+# ==========================================
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.metadata/
+.classpath
+.project
+.settings/
+*.launch
+
+# Visual Studio Code
+.vscode/
+
+# ==========================================
+# Logs e Arquivos Temporários
+# ==========================================
+*.log
+logs/
+temp/
+
