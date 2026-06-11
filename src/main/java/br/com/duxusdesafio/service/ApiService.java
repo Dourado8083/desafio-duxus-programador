@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-
+import java.util.stream.Collectors;
 /**
  * Service que possuirá as regras de negócio para o processamento dos dados
  * solicitados no desafio!
@@ -24,8 +24,10 @@ public class ApiService {
      * Vai retornar um Time, com a composição do time daquela data
      */
     public Time timeDaData(LocalDate data, List<Time> todosOsTimes){
-        // TODO Implementar método seguindo as instruções!
-        return null;
+        return todosOsTimes.stream()
+                .filter(t -> t.getData().equals(data))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -76,8 +78,14 @@ public class ApiService {
      * Dica - pense sobre repetições!
      */
     public Map<String, Long> contagemPorFuncao(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes){
-        // TODO Implementar método seguindo as instruções!
-        return null;
+        return todosOsTimes.stream()
+                .filter(t -> dentroDoperiodo(t.getData(), dataInicial, dataFinal))
+                .flatMap(t -> t.getComposicaoTime().stream())
+                .map(ct -> ct.getIntegrante().getFuncao())
+                .collect(Collectors.groupingBy(f -> f, Collectors.counting()));
     }
-
+    private boolean dentroDoperiodo(LocalDate data, LocalDate dataInicial, LocalDate dataFinal) {
+        return (dataInicial != null && data.isBefore(dataInicial)) ||
+                (dataFinal != null && data.isAfter(dataFinal)) ? false : true;
+    }
 }
