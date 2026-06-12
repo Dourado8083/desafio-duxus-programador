@@ -1,5 +1,7 @@
 package br.com.duxusdesafio.service;
 
+import br.com.duxusdesafio.exception.DataInvalidaException;
+import br.com.duxusdesafio.exception.NenhumResultadoEncontradoException;
 import br.com.duxusdesafio.model.Integrante;
 import br.com.duxusdesafio.model.Time;
 import com.tngtech.java.junit.dataprovider.DataProvider;
@@ -246,4 +248,36 @@ public class TesteApiService {
         assertEquals(esperado, contagemPorFuncao);
     }
 
+    @DataProvider
+    public static Object[][] testContagemDeClubesNullParams() {
+        DadosParaTesteApiService dados = new DadosParaTesteApiService();
+        List<Time> todosOsTimes = dados.getTodosOsTimes();
+
+        Map<String, Long> esperado = new HashMap<>();
+        esperado.put(dados.getClubeDetroitPistons(), 1L);
+        esperado.put(dados.getClubeChicagoBulls(), 2L);
+
+        return new Object[][]{
+                {null, null, todosOsTimes, esperado}
+        };
+    }
+
+    @Test
+    @UseDataProvider("testContagemDeClubesNullParams")
+    public void testContagemDeClubesComDatasNulas(LocalDate dataInicial, LocalDate dataFinal, List<Time> todosOsTimes, Map<String, Long> esperado) {
+        Map<String, Long> resultado = apiService.contagemDeClubesNoPeriodo(dataInicial, dataFinal, todosOsTimes);
+        assertEquals(esperado, resultado);
+    }
+
+    @Test(expected = DataInvalidaException.class)
+    public void testPeriodoInvalido() {
+        DadosParaTesteApiService dados = new DadosParaTesteApiService();
+        apiService.integranteMaisUsado(data1995, data1993, dados.getTodosOsTimes());
+    }
+
+    @Test(expected = NenhumResultadoEncontradoException.class)
+    public void testTimeDaDataInexistente() {
+        DadosParaTesteApiService dados = new DadosParaTesteApiService();
+        apiService.timeDaData(LocalDate.of(2000, 1, 1), dados.getTodosOsTimes());
+    }
 }

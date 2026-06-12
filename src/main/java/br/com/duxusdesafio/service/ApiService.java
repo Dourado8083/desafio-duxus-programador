@@ -88,7 +88,9 @@ public class ApiService {
 
         Map<String, Long> contagem = filtrarPorPeriodo(todosOsTimes, dataInicial, dataFinal)
                 .flatMap(t -> t.getComposicaoTime().stream())
-                .map(ct -> ct.getIntegrante().getFuncao())
+                .map(ct -> ct.getIntegrante())
+                .distinct() // evita contar o mesmo integrante mais de uma vez
+                .map(Integrante::getFuncao)
                 .collect(Collectors.groupingBy(f -> f, Collectors.counting()));
 
         if (contagem.isEmpty()) throw new NenhumResultadoEncontradoException("Nenhuma função encontrada no período.");

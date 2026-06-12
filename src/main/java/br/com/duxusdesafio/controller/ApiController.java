@@ -23,6 +23,7 @@ public class ApiController {
 
     @Autowired
     private TimeRepository timeRepository;
+    @Autowired
     private IntegranteRepository integranteRepository;
 
     @GetMapping("/por-data")
