@@ -1,6 +1,8 @@
 package br.com.duxusdesafio.model;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import javax.persistence.*;
 import java.util.Objects;
 
@@ -12,7 +14,8 @@ public class ComposicaoTime {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
-	
+
+	@JsonBackReference
 	@ManyToOne
 	private Time time;
 
