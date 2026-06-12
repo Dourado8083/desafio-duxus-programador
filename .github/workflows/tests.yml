@@ -21,8 +21,6 @@ jobs:
           distribution: 'microsoft'
           cache: 'maven'
 
-      - name: Permissão ao mvnw
-        run: chmod +x ./mvnw
 
       - name: Rodar testes
-        run: ./mvnw test -Dspring.datasource.url=jdbc:h2:mem:testdb -Dspring.datasource.driver-class-name=org.h2.Driver -Dspring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+        run: mvn test -Dspring.datasource.url=jdbc:h2:mem:testdb -Dspring.datasource.driver-class-name=org.h2.Driver -Dspring.jpa.database-platform=org.hibernate.dialect.H2Dialect
