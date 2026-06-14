@@ -1,5 +1,6 @@
 package br.com.duxusdesafio.controller;
 
+import br.com.duxusdesafio.dto.TimeDTO;
 import br.com.duxusdesafio.exception.NenhumResultadoEncontradoException;
 import br.com.duxusdesafio.model.Integrante;
 import br.com.duxusdesafio.model.Time;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/times")
@@ -33,9 +35,18 @@ public class TimeController {
         }
         return ResponseEntity.status(201).body(timeRepository.save(time));
     }
-
     @GetMapping
-    public ResponseEntity<List<Time>> listarTodos() {
-        return ResponseEntity.ok(timeRepository.findAll());
+    public ResponseEntity<List<TimeDTO>> listarTodos() {
+        List<TimeDTO> times = timeRepository.findAll().stream()
+                .map(t -> new TimeDTO(
+                        t.getId(),
+                        t.getNomeDoClube(),
+                        t.getData(),
+                        t.getComposicaoTime().stream()
+                                .map(ct -> ct.getIntegrante().getNome())
+                                .collect(Collectors.toList())
+                ))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(times);
     }
 }
