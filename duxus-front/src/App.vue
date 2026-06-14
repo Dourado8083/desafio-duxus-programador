@@ -1,11 +1,12 @@
-<script setup lang="ts"></script>
+<script setup>
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <div>
+    <nav style="padding: 1rem; background: #333; color: white;">
+      <router-link to="/integrantes" style="color: white; margin-right: 1rem;">Integrantes</router-link>
+      <router-link to="/times" style="color: white;">Times</router-link>
+    </nav>
+    <router-view />
+  </div>
 </template>
-
-<style scoped></style>
