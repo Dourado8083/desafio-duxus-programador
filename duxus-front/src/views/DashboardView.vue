@@ -12,14 +12,14 @@ const loading = ref(true)
 
 onMounted(async () => {
   try {
-const [integrante, clube, funcao, clubes, funcoes, timeMaisRecorrente] = await Promise.all([
-  api.get('/api/times/integrante-mais-usado'),
-  api.get('/api/times/clube-mais-recorrente'),
-  api.get('/api/times/funcao-mais-recorrente'),
-  api.get('/api/times/contagem-clubes'),
-  api.get('/api/times/contagem-funcoes'),
-  api.get('/api/times/integrantes-time-mais-recorrente')
-])
+    const [integrante, clube, funcao, clubes, funcoes, timeMaisRecorrente] = await Promise.all([
+      api.get('/api/times/integrante-mais-usado'),
+      api.get('/api/times/clube-mais-recorrente'),
+      api.get('/api/times/funcao-mais-recorrente'),
+      api.get('/api/times/contagem-clubes'),
+      api.get('/api/times/contagem-funcoes'),
+      api.get('/api/times/integrantes-time-mais-recorrente')
+    ])
 
     integranteMaisUsado.value = integrante.data
     clubeMaisRecorrente.value = clube.data
@@ -36,58 +36,143 @@ const [integrante, clube, funcao, clubes, funcoes, timeMaisRecorrente] = await P
 </script>
 
 <template>
-  <div style="padding: 2rem;">
-    <h2>Dashboard</h2>
+  <div>
+    <h2 class="page-title">Dashboard</h2>
 
-    <div v-if="loading">Carregando...</div>
+    <div v-if="loading" class="loading">Carregando dados...</div>
 
-    <div v-else style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-
-      <!-- Integrante mais usado -->
-      <div style="background: #1e1e2e; padding: 1.5rem; border-radius: 8px; color: white;">
-        <h4 style="color: #aaa;">⭐ Integrante Mais Usado</h4>
-        <p style="font-size: 1.5rem; font-weight: bold;">{{ integranteMaisUsado?.nome }}</p>
-        <p style="color: #aaa;">{{ integranteMaisUsado?.funcao }}</p>
+    <div v-else class="dashboard-grid">
+      <div class="card">
+        <span class="card-label">Integrante Mais Usado</span>
+        <strong class="card-value">{{ integranteMaisUsado?.nome || '-' }}</strong>
+        <span class="card-subtext">{{ integranteMaisUsado?.funcao || '-' }}</span>
       </div>
 
-      <!-- Clube mais recorrente -->
-      <div style="background: #1e1e2e; padding: 1.5rem; border-radius: 8px; color: white;">
-        <h4 style="color: #aaa;">🏆 Clube Mais Recorrente</h4>
-        <p style="font-size: 1.5rem; font-weight: bold;">{{ clubeMaisRecorrente }}</p>
+      <div class="card">
+        <span class="card-label">Clube Mais Recorrente</span>
+        <strong class="card-value">{{ clubeMaisRecorrente || '-' }}</strong>
       </div>
 
-      <!-- Função mais recorrente -->
-      <div style="background: #1e1e2e; padding: 1.5rem; border-radius: 8px; color: white;">
-        <h4 style="color: #aaa;">🎯 Função Mais Recorrente</h4>
-        <p style="font-size: 1.5rem; font-weight: bold;">{{ funcaoMaisRecorrente }}</p>
+      <div class="card">
+        <span class="card-label">Função Mais Recorrente</span>
+        <strong class="card-value">{{ funcaoMaisRecorrente || '-' }}</strong>
       </div>
 
-      <!-- Time mais recorrente -->
-      <div style="background: #1e1e2e; padding: 1.5rem; border-radius: 8px; color: white;">
-        <h4 style="color: #aaa;">👥 Time Mais Recorrente</h4>
-        <ul style="padding-left: 1rem;">
+      <div class="card">
+        <h3>Time Mais Recorrente</h3>
+        <ul class="list" v-if="integrantesTimeMaisRecorrente.length">
           <li v-for="nome in integrantesTimeMaisRecorrente" :key="nome">{{ nome }}</li>
         </ul>
+        <p v-else class="empty-text">Nenhum registro encontrado.</p>
       </div>
 
-      <!-- Contagem de clubes -->
-      <div style="background: #1e1e2e; padding: 1.5rem; border-radius: 8px; color: white;">
-        <h4 style="color: #aaa;">📊 Aparições por Clube</h4>
-        <div v-for="(qtd, clube) in contagemClubes" :key="clube" style="margin-bottom: 0.5rem;">
-          <span>{{ clube }}</span>
-          <span style="float: right; font-weight: bold;">{{ qtd }}x</span>
+      <div class="card">
+        <h3>Aparições por Clube</h3>
+        <div class="list" v-if="Object.keys(contagemClubes).length">
+          <div v-for="(qtd, clube) in contagemClubes" :key="clube" class="list-item">
+            <span>{{ clube }}</span>
+            <span class="count">{{ qtd }}x</span>
+          </div>
         </div>
+        <p v-else class="empty-text">Nenhum registro encontrado.</p>
       </div>
 
-      <!-- Contagem de funções -->
-      <div style="background: #1e1e2e; padding: 1.5rem; border-radius: 8px; color: white;">
-        <h4 style="color: #aaa;">📋 Contagem por Função</h4>
-        <div v-for="(qtd, funcao) in contagemFuncoes" :key="funcao" style="margin-bottom: 0.5rem;">
-          <span>{{ funcao }}</span>
-          <span style="float: right; font-weight: bold;">{{ qtd }}x</span>
+      <div class="card">
+        <h3>Contagem por Função</h3>
+        <div class="list" v-if="Object.keys(contagemFuncoes).length">
+          <div v-for="(qtd, funcao) in contagemFuncoes" :key="funcao" class="list-item">
+            <span>{{ funcao }}</span>
+            <span class="count">{{ qtd }}x</span>
+          </div>
         </div>
+        <p v-else class="empty-text">Nenhum registro encontrado.</p>
       </div>
-
     </div>
   </div>
 </template>
+
+<style scoped>
+.page-title {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.loading {
+  color: #8d8d99;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: #202024;
+  border: 1px solid #323238;
+  border-radius: 6px;
+  padding: 1.25rem;
+}
+
+.card h3 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #e1e1e6;
+  border-bottom: 1px solid #323238;
+  padding-bottom: 0.5rem;
+}
+
+.card-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #8d8d99;
+  margin-bottom: 0.5rem;
+}
+
+.card-value {
+  display: block;
+  font-size: 1.35rem;
+  color: #ffffff;
+}
+
+.card-subtext {
+  display: block;
+  font-size: 0.85rem;
+  color: #8d8d99;
+  margin-top: 0.25rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.list-item, .list li {
+  display: flex;
+  justify-content: space-between;
+  background: #121214;
+  padding: 0.6rem 0.85rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.count {
+  font-weight: bold;
+  color: #00b37e;
+}
+
+.empty-text {
+  font-size: 0.9rem;
+  color: #8d8d99;
+}
+</style>
