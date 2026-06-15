@@ -1,0 +1,23 @@
+services:
+  backend:
+    build:
+      context: ./duxus-back
+      dockerfile: Dockerfile
+    container_name: spring-backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - h2-data:/data
+
+  frontend:
+    build:
+      context: ./duxus-front
+      dockerfile: Dockerfile
+    container_name: vue-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  h2-data:
